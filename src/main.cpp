@@ -6,7 +6,7 @@
 int main() {
     events::dispatcher<game_events> d;
 
-    d.on<my_event>([](my_event e) {
+    d.on<my_event>([](my_event const &e) {
         std::cout << e.get_i() << '\n';
     });
 
