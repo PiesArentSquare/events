@@ -1,5 +1,7 @@
 #pragma once
 
+#include "message.h"
+
 namespace events {
 
 template<typename event_type>
@@ -7,6 +9,9 @@ class event_base {
 public:
     virtual ~event_base() = default;
     virtual event_type type() const = 0;
+    
+    virtual void serialize(message &msg) const {}
+    virtual void deserialize(message &msg) {}
 };
 
 template<typename event_type, event_type t>

@@ -1,16 +1,27 @@
 #include "game_events.h"
-#include <events/dispatcher.h>
+#include <events/network_dispatcher.h>
 
 #include <iostream>
 
-int main() {
-    events::dispatcher<game_events> d;
+events::event_base<game_events> *mapper(game_events t) {
+    switch(t) {
+        case game_events::my_event:
+            return new my_event;
+    }
+}
 
-    d.on<my_event>([](my_event const &e) {
+int main() {
+    events::network_dispatcher<game_events> client(mapper);
+    events::network_dispatcher<game_events> server(mapper);
+
+    events::connection c(server);
+
+    server.on<my_event>([&](my_event const &e) {
         std::cout << e.get_i() << '\n';
     });
 
-    d.emit(my_event{5});
+    client.emit(my_event{5}, c);
 
     return 0;
 }
+
