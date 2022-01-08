@@ -1,6 +1,6 @@
 #pragma once
 
-#include "message.h"
+#include "network/message.h"
 
 namespace events {
 
@@ -10,8 +10,9 @@ public:
     virtual ~event_base() = default;
     virtual event_type type() const = 0;
     
-    virtual void serialize(message &msg) const {}
-    virtual void deserialize(message &msg) {}
+    virtual void serialize(message<event_type> &msg) const {}
+    virtual void deserialize(message<event_type> &msg) {}
+    virtual constexpr size_t byte_size() const { return 0; };
 };
 
 template<typename event_type, event_type t>
@@ -24,5 +25,10 @@ public:
     inline static constexpr event_type type_s() { return t; }
     inline event_type type() const override { return t; };
 };
+
+template<typename... args>
+constexpr inline size_t get_member_size(args...) {
+    return (... + sizeof(args));
+}
 
 }

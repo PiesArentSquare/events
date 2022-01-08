@@ -1,5 +1,5 @@
 #pragma once
-#include "dispatcher.h"
+#include "../dispatcher.h"
 
 #include <functional>
 #include <iostream>
@@ -7,38 +7,32 @@
 namespace events {
 
 template<typename event_type>
+class connection;
+
+template<typename event_type>
+using mapper_func = std::function<event_base<event_type>*(event_type)>;
+
+template<typename event_type>
 class network_dispatcher;
 
 template<typename event_type>
-class connection {
-    network_dispatcher<event_type> &m_dispatcher;
-public:
-    connection(network_dispatcher<event_type> &dispatcher) : m_dispatcher(dispatcher) {}
-
-    void send(event_type t, message const &msg) const {
-        m_dispatcher.receive(t, msg);
-    }
-};
-
-template<typename event_type>
 class network_dispatcher : protected dispatcher<event_type> {
-    using mapper_func = std::function<event_base<event_type>*(event_type)>;
-    mapper_func m_mapper;
+    mapper_func<event_type> m_mapper;
 
     friend connection<event_type>;
-    inline void receive(event_type t, message msg) {
+    inline void receive(event_type t, message<event_type> &msg) {
         event_base<event_type> *e = m_mapper(t);
         e->deserialize(msg);
         dispatcher<event_type>::emit(*e);
         delete e;
     }
 public:
-    network_dispatcher(mapper_func mapper) : m_mapper(mapper) {}
+    network_dispatcher(mapper_func<event_type> mapper) : m_mapper(mapper) {}
 
     inline void emit(event_base<event_type> const &e, connection<event_type> const &c) {
-        message msg;
+        message<event_type> msg(e.type());
         e.serialize(msg);
-        c.send(e.type(), msg);
+        c.send(msg);
     }
 
     template<typename T>
