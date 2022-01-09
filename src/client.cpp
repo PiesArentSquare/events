@@ -7,9 +7,13 @@
 int main() {
     events::client<game_events> c(mapper);
     c.connect("127.0.0.1", 60000);
-    c.on<ping_server>([](ping_server const &e) {
+    c.on<server_accept>([](server_accept const &e){
+        std::cout << "successfully joined server\n";
+    }).on<ping_server>([](ping_server const &e) {
         auto now = std::chrono::system_clock::now();
         std::cout << "ping: " << std::chrono::duration<double>(now - e.get_now()).count() << '\n';
+    }).on<server_message>([](server_message const &e) {
+        std::cout << e.get_sender_id() << " says hi\n";
     });
 
     bool key[3] = {false, false, false};
@@ -28,6 +32,7 @@ int main() {
         }
 
         if (key_clicked(0)) c.send(ping_server(std::chrono::system_clock::now()));
+        if (key_clicked(1)) c.send(message_all());
         if (key_clicked(2)) quit = true;
         for (int i = 0; i < 3; i++) old_key[i] = key[i];
 
@@ -38,6 +43,8 @@ int main() {
             quit = true;
         }
     }
+
+    std::cout << "quitting...\n";
 
     return 0;
 }

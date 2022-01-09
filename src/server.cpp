@@ -1,15 +1,20 @@
 #include <events/network/server.h>
 #include "game_events.h"
-// #include <events/network/network_dispatcher.h>
 #include <iostream>
 
 int main() {
 
     events::server<game_events> server(60000, mapper);
-    server.on_client_connect([](auto c) {
+    server.on_client_connect([&](auto remote) {
+        server.send(remote, server_accept());
         return true;
-    }).on<ping_server>([&](ping_server const &e, events::remote_connection<game_events> remote){
+    }).on_client_disconnect([&](auto remote){
+        std::cout << remote->get_id() << " disconnected\n";
+    }).on<ping_server>([&](ping_server const &e, auto remote){
         server.send(remote, e);
+    }).on<message_all>([&](message_all const &e, auto remote){
+        std::cout << remote->get_id() << '\n';
+        server.send_all(server_message(remote->get_id()), remote);
     });
 
     server.start();
