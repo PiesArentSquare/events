@@ -15,12 +15,12 @@ public:
     tsqueue(tsqueue<T> const &) = delete;
     /* virtual */ ~tsqueue() { clear(); }
 
-    T const &front() {
+    T &front() {
         std::scoped_lock lock(m_mux);
         return m_queue.front();
     }
 
-    T const &back() {
+    T &back() {
         std::scoped_lock lock(m_mux);
         return m_queue.back();
     }

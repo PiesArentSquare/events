@@ -4,27 +4,21 @@
 #include <cstdint>
 #include <vector>
 #include <stdexcept>
-#include <iostream>
-#include <memory>
 
 namespace events {
 
 template<typename event_type>
 class connection;
 
-template<typename event_type>
 class message {
-    event_type m_type;
     std::vector<uint8_t> m_body;
     std::vector<uint8_t>::const_iterator m_it;
 
-    friend class connection<event_type>;
-    
-    message() : m_it(m_body.begin()) {}
+    template<typename> friend class connection;
 public:
-    explicit message(event_type type) : m_type(type), m_it(m_body.begin()) {};
-    message(message const &msg) : m_type(msg.m_type), m_body(msg.m_body), m_it(m_body.begin()) {}
-    message(message &&msg) : m_type(std::move(msg.m_type)), m_body(std::move(msg.m_body)), m_it(m_body.begin()) {}
+    message() : m_it(m_body.begin()) {};
+    // message(message const &msg) : m_body(msg.m_body), m_it(m_body.begin()) {}
+    // message(message &&msg) : m_body(std::move(msg.m_body)), m_it(m_body.begin()) {}
     
     template<typename T, typename = std::enable_if_t<std::is_standard_layout_v<T>>>
     inline message &operator<<(T const &t) {
@@ -43,13 +37,10 @@ public:
         return *this;
     }
 
-    inline event_type type() const { return m_type; }
-};
-
-template<typename event_type>
-struct owned_message {
-    message<event_type> msg;
-    std::shared_ptr<connection<event_type>> remote = nullptr;
+    void resize(size_t size) {
+        m_body.resize(size);
+        m_it = m_body.begin();
+    }
 };
 
 }

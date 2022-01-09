@@ -1,8 +1,10 @@
 #pragma once
-#include "../dispatcher.h"
 
+#include "../event.h"
+
+#include <map>
 #include <functional>
-#include <iostream>
+#include <memory>
 
 namespace events {
 
@@ -10,34 +12,42 @@ template<typename event_type>
 class connection;
 
 template<typename event_type>
-using mapper_func = std::function<event_base<event_type>*(event_type)>;
+using mapper_func = std::function<event_base<event_type> *(event_type)>;
+template<typename event_type>
+using remote_connection = std::shared_ptr<connection<event_type>>;
 
 template<typename event_type>
-class network_dispatcher;
-
-template<typename event_type>
-class network_dispatcher : protected dispatcher<event_type> {
+class network_dispatcher {
+    std::multimap<event_type, std::function<void(event_base<event_type> const &, remote_connection<event_type>)>> m_listeners;
     mapper_func<event_type> m_mapper;
 
-    friend connection<event_type>;
-    inline void receive(event_type t, message<event_type> &msg) {
-        event_base<event_type> *e = m_mapper(t);
-        e->deserialize(msg);
-        dispatcher<event_type>::emit(*e);
-        delete e;
+    event_base<event_type> *get_event(event_type t) {
+        return m_mapper(t);
     }
 public:
-    network_dispatcher(mapper_func<event_type> mapper) : m_mapper(mapper) {}
+    explicit network_dispatcher(mapper_func<event_type> mapper) : m_mapper(mapper) {}
 
-    inline void emit(event_base<event_type> const &e, connection<event_type> const &c) {
-        message<event_type> msg(e.type());
-        e.serialize(msg);
-        c.send(msg);
+    friend connection<event_type>;
+    inline void emit(event_base<event_type> const &e, remote_connection<event_type> remote) {
+        auto callbacks = m_listeners.equal_range(e.type());
+        for (auto it = callbacks.first; it != callbacks.second; it++)
+            it->second(e, remote);
+    }
+
+    template<typename T>
+    inline void on(std::function<void(T const &e, remote_connection<event_type> remote)> const &callback) {
+        m_listeners.emplace(T::type_s(), [callback](event_base<event_type> const &e, remote_connection<event_type> remote) {
+            T const &te = static_cast<T const &>(e);
+            callback(te, remote);
+        });
     }
 
     template<typename T>
     inline void on(std::function<void(T const &e)> const &callback) {
-        dispatcher<event_type>::on(callback);
+        m_listeners.emplace(T::type_s(), [callback](event_base<event_type> const &e, remote_connection<event_type> remote) {
+            T const &te = static_cast<T const &>(e);
+            callback(te);
+        });
     }
 };
 

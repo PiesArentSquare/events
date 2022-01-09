@@ -10,8 +10,8 @@ public:
     virtual ~event_base() = default;
     virtual event_type type() const = 0;
     
-    virtual void serialize(message<event_type> &msg) const {}
-    virtual void deserialize(message<event_type> &msg) {}
+    virtual void serialize(message &msg) const {}
+    virtual void deserialize(message &msg) {}
     virtual constexpr size_t byte_size() const { return 0; };
 };
 
