@@ -152,7 +152,7 @@ public:
         return m_socket.is_open();
     }
 
-    inline int get_id() const { return m_id; }
+    inline uint32_t get_id() const { return m_id; }
 
     inline void send(event_ptr<event_type> e) {
         asio::post(m_context, [this, e](){

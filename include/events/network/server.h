@@ -111,7 +111,7 @@ public:
         return *this;
     }
 
-    inline server &on_client_disconnect(std::function<bool(remote_connection<event_type>)> callback) {
+    inline server &on_client_disconnect(std::function<void(remote_connection<event_type>)> callback) {
         m_on_client_disconnect = callback;
         return *this;
     }
