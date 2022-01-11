@@ -7,9 +7,6 @@
 
 namespace events {
 
-template<typename event_type>
-class connection;
-
 class message {
     std::vector<uint8_t> m_body;
     std::vector<uint8_t>::const_iterator m_it;
@@ -17,8 +14,8 @@ class message {
     template<typename> friend class connection;
 public:
     message() : m_it(m_body.begin()) {};
-    // message(message const &msg) : m_body(msg.m_body), m_it(m_body.begin()) {}
-    // message(message &&msg) : m_body(std::move(msg.m_body)), m_it(m_body.begin()) {}
+    message(message const &msg) : m_body(msg.m_body), m_it(m_body.begin()) {}
+    message(message &&msg) : m_body(std::move(msg.m_body)), m_it(m_body.begin()) {}
     
     template<typename T, typename = std::enable_if_t<std::is_standard_layout_v<T>>>
     inline message &operator<<(T const &t) {

@@ -19,7 +19,7 @@ int main() {
 
     server.start();
     while(true) {
-        server.update();
+        server.update(-1, true);
     }
 
     return 0;

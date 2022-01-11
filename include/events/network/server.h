@@ -30,24 +30,24 @@ class server {
     // async
     void wait_for_client_connection() {
         m_acceptor.async_accept([this](std::error_code ec, asio::ip::tcp::socket socket) {
-            if (!ec) {
-                std::cout << "server new connection: " << socket.remote_endpoint() << '\n';
-
-                remote_connection<event_type> client =
-                    std::make_shared<connection<event_type>>(connection<event_type>::owner::server,
-                    m_context, std::move(socket), m_inbox, m_dispatcher);
-
-                if (on_client_connect_impl(client)) {
-                    m_connections.push_back(std::move(client));
-                    m_connections.back()->connect_to_client(m_next_client_id++);
-
-                    std::cout << "server: connection approved for " << m_connections.back()->get_id() << '\n';
-                } else {
-                    std::cout << "server: connection denied\n";
-                }
-
-            } else {
+            if (ec) {
                 std::cerr << "server: new connection error: " << ec.message() << '\n';
+                return;
+            }
+            
+            std::cout << "server new connection: " << socket.remote_endpoint() << '\n';
+
+            remote_connection<event_type> client =
+                std::make_shared<connection<event_type>>(connection<event_type>::owner::server,
+                m_context, std::move(socket), m_inbox, m_dispatcher);
+
+            if (on_client_connect_impl(client)) {
+                m_connections.push_back(std::move(client));
+                m_connections.back()->connect_to_client(m_next_client_id++);
+
+                std::cout << "server: connection approved for " << m_connections.back()->get_id() << '\n';
+            } else {
+                std::cout << "server: connection denied\n";
             }
 
             wait_for_client_connection();
@@ -132,7 +132,10 @@ public:
         send_all_impl(std::make_shared<T>(e), ignore);
     }
 
-    void update(size_t max_events = -1) {
+    void update(size_t max_events = -1, bool wait_for_message = false) {
+        if (wait_for_message)
+            m_inbox.wait();
+        
         size_t events_processed = 0;
         while(events_processed < max_events && !m_inbox.is_empty()) {
             auto e = m_inbox.pop_front();

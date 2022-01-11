@@ -27,7 +27,7 @@ public:
     };
 
     size_t byte_size() const override {
-        return events::get_member_size(m_now);
+        return sizeof(m_now);
     }
 
     auto get_now() const { return m_now; }
@@ -50,7 +50,7 @@ public:
     }
 
     size_t byte_size() const override {
-        return events::get_member_size(m_sender_id);
+        return sizeof(m_sender_id);
     }
 
     auto get_sender_id() const { return m_sender_id; }

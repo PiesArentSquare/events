@@ -26,9 +26,4 @@ public:
     inline event_type type() const override { return t; };
 };
 
-template<typename... args>
-constexpr inline size_t get_member_size(args...) {
-    return (... + sizeof(args));
-}
-
 }
