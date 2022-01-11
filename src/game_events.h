@@ -18,17 +18,7 @@ public:
     explicit ping_server(std::chrono::system_clock::time_point now) : m_now(now) {}
     ping_server() = default;
 
-    void serialize(events::message &msg) const override {
-        msg << m_now;
-    };
-
-    void deserialize(events::message &msg) override {
-        msg >> m_now;
-    };
-
-    size_t byte_size() const override {
-        return sizeof(m_now);
-    }
+    EVENTS__SET_FIELDS(m_now)
 
     auto get_now() const { return m_now; }
 };
@@ -41,17 +31,7 @@ public:
     explicit server_message(uint32_t sender_id) : m_sender_id(sender_id) {}
     server_message() = default;
 
-    void serialize(events::message &msg) const override {
-        msg << m_sender_id;
-    }
-
-    void deserialize(events::message &msg) override {
-        msg >> m_sender_id;
-    }
-
-    size_t byte_size() const override {
-        return sizeof(m_sender_id);
-    }
+    EVENTS__SET_FIELDS(m_sender_id)
 
     auto get_sender_id() const { return m_sender_id; }
 };
